@@ -1,23 +1,25 @@
-import codecs
-import re
 
-def makeTable(html):
-    buyPattern = "<tr class=\"center mini blue b670\" height=\"22\">"          # recuros - cred
-    sellPattern = "<tr class=\"center mini orange sep b670\" height=\"22\">"    # cred - recurso
-    matches = re.finditer(buyPattern, html)
-    matches_positions = [match.start() for match in matches]
-    print(matches_positions)
+def getMarketStats(mrk):
+    with open(mrk) as f:
+        mrkIn = f.readlines()
+    # you may also want to remove whitespace characters like `\n` at the end of each line
+    mrkIn = [x.strip() for x in mrkIn]
+    mrkInClean = list() 
+    mrkInClean.append(mrkIn[2])
+    mrkInClean.append(mrkIn[3])
+    mrkInClean.append(mrkIn[5])
+    mrkInClean.append(mrkIn[6])
+    mrkInClean.append(mrkIn[8])
+    mrkInClean.append(mrkIn[9])
+    mrkInClean.append(mrkIn[11])
+    mrkInClean.append(mrkIn[12])
+    print(mrkInClean)
 
-def getMarketStats(html):
-    f=codecs.open(html, 'r')
-    return f.read()
 
 
 def main():
-    htmlMarket = 'market.html'
-    marketStats=getMarketStats(htmlMarket)
-    print(marketStats)
-    makeTable(marketStats)
+    marketInput = 'market.txt'
+    getMarketStats(marketInput)
 
 if __name__ == "__main__":
     main()
