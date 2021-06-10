@@ -71,6 +71,19 @@ def oneRoute(rBuyCred, rSellCred, numMrk, numRec, topN):
 
     return topNProfit, topNProfitIdx
 
+def processTopN(topNProfit, topNProfitIdx, mrk, rec, topN):
+    
+    #out = np.empty([topN, 1], dtype="S10")
+    for n in range(0,topN,2):
+        print(str("{:.2f}".format((topNProfit[n,0]-1)*100)) + "% - " + \
+              str(mrk[topNProfitIdx[n,0]]) + \
+        "(" + str(rec[topNProfitIdx[n,2]]) + "-" + str(rec[topNProfitIdx[n,3]]) + ") --- " + \
+              str(mrk[topNProfitIdx[n,1]]) + \
+        "(" + str(rec[topNProfitIdx[n,3]]) + "-" + str(rec[topNProfitIdx[n,2]]) + ")")
+
+    #print(out)
+
+
 def main():
     mrk = np.array(("Merc","Terr","Mart","Jup"))
     rec = np.array(("M","D","H","Z","N"))
@@ -81,9 +94,7 @@ def main():
     rBuyCred, rSellCred = getMarketStats(marketInput, numMrk, numRec)
     # calculate most profit with 1 route
     topNProfit, topNProfitIdx = oneRoute(rBuyCred, rSellCred, numMrk, numRec, topN)
-
-    print(topNProfit)
-    print(topNProfitIdx)
+    processTopN(topNProfit, topNProfitIdx, mrk, rec, topN)
 
 if __name__ == "__main__":
     main()
