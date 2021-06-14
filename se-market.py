@@ -61,6 +61,24 @@ def getHighestProfit6D(allPrices, numMrk, numRec):
 
     return highestProfit6Didx
 
+def getHighestProfit8D(allPrices, numMrk, numRec):
+    highestProfit8Didx = np.array((0,0,0,0,0,0))
+    highestProfit = 0.0
+
+    for m0 in range(numMrk):
+        for m1 in range(numMrk):
+            for m2 in range(numMrk):
+                for m3 in range(numMrk):
+                    for r0 in range(numRec):
+                        for r1 in range(numRec):
+                            for r2 in range(numRec):
+                                for r3 in range(numRec):
+                                    if allPrices[m0,m1,m2,m3,r0,r1,r2,r3] > highestProfit:
+                                        highestProfit = allPrices[m0,m1,m2,m3,r0,r1,r2,r3]
+                                        highestProfit8Didx = [m0,m1,m2,m3,r0,r1,r2,r3]
+
+    return highestProfit8Didx
+
 def oneRoute(rBuyCred, rSellCred, numMrk, numRec, topN):
 
     allPrices = np.arange(numMrk*numMrk*numRec*numRec, dtype=np.float32)
@@ -115,7 +133,36 @@ def twoRoutes(rBuyCred, rSellCred, numMrk, numRec, topN):
     return topNProfit, topNProfitIdx
 
 def threeRoutes(rBuyCred, rSellCred, numMrk, numRec, topN):
-    pass
+    allPrices = np.arange(numMrk*numMrk*numMrk*numMrk*numRec*numRec*numRec*numRec, dtype=np.float32)
+    allPrices = np.reshape(allPrices, (numMrk,numMrk,numMrk,numMrk,numRec,numRec,numRec,numRec))
+
+    for m0 in range(numMrk):
+        for m1 in range(numMrk):
+            for m2 in range(numMrk):
+                for m3 in range(numMrk):
+                    for r0 in range(numRec):
+                        for r1 in range(numRec):
+                            for r2 in range(numRec):
+                                for r3 in range(numRec):
+                                    allPrices[m0,m1,m2,m3,r0,r1,r2,r3] = rBuyCred[m0,r0]/rSellCred[m0,r1]*rBuyCred[m1,r1]/rSellCred[m1,r2]*rBuyCred[m2,r2]/rSellCred[m2,r3]*rBuyCred[m3,r3]/rSellCred[m3,r0] 
+    
+    topNProfitIdx = np.zeros((topN, 8), dtype=np.uint16)
+    topNProfit = np.zeros((topN, 1))
+
+    for n in range(topN):
+        highestProfit8Didx = getHighestProfit8D(allPrices, numMrk, numRec)
+        topNProfitIdx[n,0] = highestProfit8Didx[0]
+        topNProfitIdx[n,1] = highestProfit8Didx[1]
+        topNProfitIdx[n,2] = highestProfit8Didx[2]
+        topNProfitIdx[n,3] = highestProfit8Didx[3]
+        topNProfitIdx[n,4] = highestProfit8Didx[4]
+        topNProfitIdx[n,5] = highestProfit8Didx[5]
+        topNProfitIdx[n,6] = highestProfit8Didx[6]
+        topNProfitIdx[n,7] = highestProfit8Didx[7]
+        topNProfit[n] = allPrices[topNProfitIdx[n,0], topNProfitIdx[n,1], topNProfitIdx[n,2], topNProfitIdx[n,3], topNProfitIdx[n,4], topNProfitIdx[n,5], topNProfitIdx[n,6], topNProfitIdx[n,7]]
+        allPrices[topNProfitIdx[n,0], topNProfitIdx[n,1], topNProfitIdx[n,2], topNProfitIdx[n,3], topNProfitIdx[n,4], topNProfitIdx[n,5], topNProfitIdx[n,6], topNProfitIdx[n,7]] = 0
+
+    return topNProfit, topNProfitIdx
 
 def processTopN1R(topNProfit, topNProfitIdx, mrk, rec, topN):
     
@@ -140,14 +187,23 @@ def processTopN2R(topNProfit, topNProfitIdx, mrk, rec, topN):
         "(" + str(rec[topNProfitIdx[n,5]]) + "-" + str(rec[topNProfitIdx[n,3]]) + ")")
 
 def processTopN3R(topNProfit, topNProfitIdx, mrk, rec, topN):
-    pass
+    for n in range(0,topN,4):
+        print(str("{:.2f}".format((topNProfit[n,0]-1)*100)) + "% - " + 
+              str(mrk[topNProfitIdx[n,0]]) + 
+        "(" + str(rec[topNProfitIdx[n,4]]) + "-" + str(rec[topNProfitIdx[n,5]]) + ") --- " + 
+              str(mrk[topNProfitIdx[n,1]]) + 
+        "(" + str(rec[topNProfitIdx[n,5]]) + "-" + str(rec[topNProfitIdx[n,6]]) + ") --- " +  
+              str(mrk[topNProfitIdx[n,2]]) + 
+        "(" + str(rec[topNProfitIdx[n,6]]) + "-" + str(rec[topNProfitIdx[n,7]]) + ") --- " +
+              str(mrk[topNProfitIdx[n,3]]) + 
+        "(" + str(rec[topNProfitIdx[n,7]]) + "-" + str(rec[topNProfitIdx[n,4]]) + ")")
 
 def main():
     mrk = np.array(("Merc","Terr","Mart","Jup"))
     rec = np.array(("M","D","H","Z","N"))
     numMrk = 4 # Merc, Terr, Mart, Jup
     numRec = 5 # M, D, H, Z, N
-    topN = 20 
+    topN = 30 
     marketInput = 'market.txt'
     rBuyCred, rSellCred = getMarketStats(marketInput, numMrk, numRec)
     # calculate cheapest place to buy each Rec
@@ -161,6 +217,9 @@ def main():
     print("2 ROUTES")
     processTopN2R(topNProfit, topNProfitIdx, mrk, rec, topN)
     # calculate most profit with 3 routes
+    topNProfit, topNProfitIdx = threeRoutes(rBuyCred, rSellCred, numMrk, numRec, topN)
+    print("3 ROUTES")
+    processTopN3R(topNProfit, topNProfitIdx, mrk, rec, topN)
 
 if __name__ == "__main__":
     main()
