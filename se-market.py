@@ -165,16 +165,12 @@ def threeRoutes(rBuyCred, rSellCred, numMrk, numRec, topN):
     return topNProfit, topNProfitIdx
 
 def processTopN1R(topNProfit, topNProfitIdx, mrk, rec, topN):
-    
-    #out = np.empty([topN, 1], dtype="S10")
     for n in range(0,topN,2):
         print(str("{:.2f}".format((topNProfit[n,0]-1)*100)) + "% - " + \
               str(mrk[topNProfitIdx[n,0]]) + \
         "(" + str(rec[topNProfitIdx[n,2]]) + "-" + str(rec[topNProfitIdx[n,3]]) + ") --- " + \
               str(mrk[topNProfitIdx[n,1]]) + \
         "(" + str(rec[topNProfitIdx[n,3]]) + "-" + str(rec[topNProfitIdx[n,2]]) + ")")
-
-    #print(out)
 
 def processTopN2R(topNProfit, topNProfitIdx, mrk, rec, topN):
     for n in range(0,topN,3):
@@ -198,15 +194,32 @@ def processTopN3R(topNProfit, topNProfitIdx, mrk, rec, topN):
               str(mrk[topNProfitIdx[n,3]]) + 
         "(" + str(rec[topNProfitIdx[n,7]]) + "-" + str(rec[topNProfitIdx[n,4]]) + ")")
 
+def cheapestMarktPerRec(rSellCred, numMrk, numRec):
+    cheapestM = np.zeros((numRec, 1), dtype=np.uint16)
+    for r in range(numRec):
+        cheapestR = 100000
+        for m in range(numMrk):
+            if rSellCred[m,r] < cheapestR:
+                cheapestR = rSellCred[m,r]
+                cheapestM[r] = m
+
+    return cheapestM
+
+def processCheapestMarkt(cheapestR, mrk, rec, rSellCred):
+    for r in range(rec.shape[0]):
+        print("Cheapest " + str(rec[r]) + " -- " + str(mrk[cheapestR[r]]) + "(" + str(rSellCred[cheapestR[r],r]) + ")")
+        
 def main():
     mrk = np.array(("Merc","Terr","Mart","Jup"))
     rec = np.array(("M","D","H","Z","N"))
     numMrk = 4 # Merc, Terr, Mart, Jup
     numRec = 5 # M, D, H, Z, N
-    topN = 30 
+    topN = 10 
     marketInput = 'market.txt'
     rBuyCred, rSellCred = getMarketStats(marketInput, numMrk, numRec)
     # calculate cheapest place to buy each Rec
+    cheapestR = cheapestMarktPerRec(rSellCred, numMrk, numRec)
+    processCheapestMarkt(cheapestR, mrk, rec, rSellCred)
     # calculate cheapest where you get more Rec1 out of your Rec0
     # calculate most profit with 1 route
     topNProfit, topNProfitIdx = oneRoute(rBuyCred, rSellCred, numMrk, numRec, topN)
