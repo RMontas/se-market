@@ -194,20 +194,31 @@ def processTopN3R(topNProfit, topNProfitIdx, mrk, rec, topN):
               str(mrk[topNProfitIdx[n,3]]) + 
         "(" + str(rec[topNProfitIdx[n,7]]) + "-" + str(rec[topNProfitIdx[n,4]]) + ")")
 
-def cheapestMarktPerRec(rSellCred, numMrk, numRec):
+def cheapestMarktPerRec(rBuyCred, numMrk, numRec):
     cheapestM = np.zeros((numRec, 1), dtype=np.uint16)
     for r in range(numRec):
         cheapestR = 100000
         for m in range(numMrk):
-            if rSellCred[m,r] < cheapestR:
-                cheapestR = rSellCred[m,r]
+            if rBuyCred[m,r] < cheapestR:
+                cheapestR = rBuyCred[m,r]
                 cheapestM[r] = m
 
     return cheapestM
 
-def processCheapestMarktPerRec(cheapestR, mrk, rec, rSellCred):
+def mostExpensiveMarktPerRec(rBuyCred, numMrk, numRec):
+    expensiveM = np.zeros((numRec, 1), dtype=np.uint16)
+    for r in range(numRec):
+        expensiveR = 0
+        for m in range(numMrk):
+            if rBuyCred[m,r] > expensiveR:
+                expensiveR = rBuyCred[m,r]
+                expensiveM[r] = m
+
+    return expensiveM
+
+def processCheapestAndMostExpensiveMarktPerRec(cheapestR, expensiveR, mrk, rec, rBuyCred):
     for r in range(rec.shape[0]):
-        print("Cheapest " + str(rec[r]) + " -- " + str(mrk[cheapestR[r]]) + "(" + str(rSellCred[cheapestR[r],r]) + ")")
+        print("Cheapest/Most Expensive " + str(rec[r]) + " for same number of credits -- " + str(mrk[cheapestR[r]]) + "(" + str(rBuyCred[cheapestR[r],r]) + "\t\t" + str(mrk[expensiveR[r]]) + "(" + str(rBuyCred[expensiveR[r],r]) + ")")
 
 def calcBestMarkt(r0, r1, allPrices, numMrk):
     bestM = 0
@@ -215,7 +226,7 @@ def calcBestMarkt(r0, r1, allPrices, numMrk):
 
     for m in range(numMrk): 
         if allPrices[r0, r1, m] > bestR1:
-            bestR1 = np.ceil(allPrices[r0, r1, m])
+            bestR1 = allPrices[r0, r1, m]
             bestM = m
 
     return bestM, bestR1
@@ -224,11 +235,17 @@ def calcCheapestMarktForGivenTrade(rBuyCred, rSellCred, numMrk, numRec):
 
     allPrices = np.arange(numMrk*numRec*numRec, dtype=np.float32)
     allPrices = np.reshape(allPrices, (numRec,numRec,numMrk))
+    rec = np.zeros((numRec))
+    rec[0] = 60000 # M
+    rec[1] = 30000 # D
+    rec[2] = 20000 # H
+    rec[3] = 10000 # Z
+    rec[4] = 30 # N
 
     for r0 in range(numRec):
         for r1 in range(numRec):
             for m0 in range(numMrk):
-                allPrices[r0,r1,m0] = 5000*rBuyCred[m0,r0]/rSellCred[m0,r1] 
+                allPrices[r0,r1,m0] = rec[r0]*rBuyCred[m0,r0]/rSellCred[m0,r1] 
     
     bestM0 = np.zeros((numRec, numRec), dtype=np.uint32)
     bestR1 = np.zeros((numRec, numRec), dtype=np.uint32)
@@ -244,19 +261,19 @@ def processMarktTables(bestM0, bestR1, mrk, rec):
 
     print("Best market for r0 (ver) for r1 (hor)")
     print("\t" + rec[0] + "\t" + rec[1] + "\t" + rec[2] + "\t" + rec[3] + "\t" + rec[4])
-    print(rec[0] + "\t" + "---" + "\t" + mrk[bestM0[0,1]] + "\t" + mrk[bestM0[0,2]] + "\t" + mrk[bestM0[0,3]] + "\t" + mrk[bestM0[0,4]])
-    print(rec[1] + "\t" + mrk[bestM0[1,0]] + "\t" + "---" + "\t" + mrk[bestM0[1,2]] + "\t" + mrk[bestM0[1,3]] + "\t" + mrk[bestM0[1,4]])
-    print(rec[2] + "\t" + mrk[bestM0[2,0]] + "\t" + mrk[bestM0[2,1]] + "\t" + "---" + "\t" + mrk[bestM0[2,3]] + "\t" + mrk[bestM0[2,4]])
-    print(rec[3] + "\t" + mrk[bestM0[3,0]] + "\t" + mrk[bestM0[3,1]] + "\t" + mrk[bestM0[3,2]] + "\t" + "---" + "\t" + mrk[bestM0[3,4]])
-    print(rec[4] + "\t" + mrk[bestM0[4,0]] + "\t" + mrk[bestM0[4,1]] + "\t" + mrk[bestM0[4,2]] + "\t" + mrk[bestM0[4,3]] + "\t" + "---")
+    print("60000 " + rec[0] + "\t" + "---" + "\t" + mrk[bestM0[0,1]] + "\t" + mrk[bestM0[0,2]] + "\t" + mrk[bestM0[0,3]] + "\t" + mrk[bestM0[0,4]])
+    print("30000 " + rec[1] + "\t" + mrk[bestM0[1,0]] + "\t" + "---" + "\t" + mrk[bestM0[1,2]] + "\t" + mrk[bestM0[1,3]] + "\t" + mrk[bestM0[1,4]])
+    print("20000 " + rec[2] + "\t" + mrk[bestM0[2,0]] + "\t" + mrk[bestM0[2,1]] + "\t" + "---" + "\t" + mrk[bestM0[2,3]] + "\t" + mrk[bestM0[2,4]])
+    print("10000 " + rec[3] + "\t" + mrk[bestM0[3,0]] + "\t" + mrk[bestM0[3,1]] + "\t" + mrk[bestM0[3,2]] + "\t" + "---" + "\t" + mrk[bestM0[3,4]])
+    print("30    " + rec[4] + "\t" + mrk[bestM0[4,0]] + "\t" + mrk[bestM0[4,1]] + "\t" + mrk[bestM0[4,2]] + "\t" + mrk[bestM0[4,3]] + "\t" + "---")
 
-    print("Highest ammount of r1 from top table for 5000 of r0")
+    print("Highest ammount of r1 from top table for r0")
     print("\t" + rec[0] + "\t" + rec[1] + "\t" + rec[2] + "\t" + rec[3] + "\t" + rec[4])
-    print(rec[0] + "\t" + "---" + "\t" + str(bestR1[0,1]) + "\t" + str(bestR1[0,2]) + "\t" + str(bestR1[0,3]) + "\t" + str(bestR1[0,4]))
-    print(rec[1] + "\t" + str(bestR1[1,0]) + "\t" + "---" + "\t" + str(bestR1[1,2]) + "\t" + str(bestR1[1,3]) + "\t" + str(bestR1[1,4]))
-    print(rec[2] + "\t" + str(bestR1[2,0]) + "\t" + str(bestR1[2,1]) + "\t" + "---" + "\t" + str(bestR1[2,3]) + "\t" + str(bestR1[2,4]))
-    print(rec[3] + "\t" + str(bestR1[3,0]) + "\t" + str(bestR1[3,1]) + "\t" + str(bestR1[3,2]) + "\t" + "---" + "\t" + str(bestR1[3,4]))
-    print(rec[4] + "\t" + str(bestR1[4,0]) + "\t" + str(bestR1[4,1]) + "\t" + str(bestR1[4,2]) + "\t" + str(bestR1[4,3]) + "\t" + "---")
+    print("60000 " + rec[0] + "\t" + "---" + "\t" + str(bestR1[0,1]) + "\t" + str(bestR1[0,2]) + "\t" + str(bestR1[0,3]) + "\t" + str(bestR1[0,4]))
+    print("30000 " + rec[1] + "\t" + str(bestR1[1,0]) + "\t" + "---" + "\t" + str(bestR1[1,2]) + "\t" + str(bestR1[1,3]) + "\t" + str(bestR1[1,4]))
+    print("20000 " + rec[2] + "\t" + str(bestR1[2,0]) + "\t" + str(bestR1[2,1]) + "\t" + "---" + "\t" + str(bestR1[2,3]) + "\t" + str(bestR1[2,4]))
+    print("10000 " + rec[3] + "\t" + str(bestR1[3,0]) + "\t" + str(bestR1[3,1]) + "\t" + str(bestR1[3,2]) + "\t" + "---" + "\t" + str(bestR1[3,4]))
+    print("30    " + rec[4] + "\t" + str(bestR1[4,0]) + "\t" + str(bestR1[4,1]) + "\t" + str(bestR1[4,2]) + "\t" + str(bestR1[4,3]) + "\t" + "---")
 
 def main():
     mrk = np.array(("Merc","Terr","Mart","Jup"))
@@ -266,9 +283,10 @@ def main():
     topN = 10 
     marketInput = 'market.txt'
     rBuyCred, rSellCred = getMarketStats(marketInput, numMrk, numRec)
-    # calculate cheapest place to buy each Rec
+    # calculate cheapest/most expensive place to buy each Rec
     cheapestR = cheapestMarktPerRec(rSellCred, numMrk, numRec)
-    processCheapestMarktPerRec(cheapestR, mrk, rec, rSellCred)
+    mostExpensiveR = mostExpensiveMarktPerRec(rSellCred, numMrk, numRec)
+    processCheapestAndMostExpensiveMarktPerRec(cheapestR, mostExpensiveR, mrk, rec, rSellCred)
     # given r0 and r1 calculate cheapest market
     bestM0, bestR1 = calcCheapestMarktForGivenTrade(rBuyCred, rSellCred, numMrk, numRec)
     processMarktTables(bestM0, bestR1, mrk, rec)
