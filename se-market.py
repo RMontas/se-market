@@ -7,14 +7,19 @@ def getMarketStats(mrk, numMrk, numRec):
         mrkIn = f.readlines()
     mrkIn = [x.strip() for x in mrkIn]
     mrkInClean = []
-    mrkInClean.append(mrkIn[2])
+    mrkInClean.append(mrkIn[2]) # p0
     mrkInClean.append(mrkIn[3])
-    mrkInClean.append(mrkIn[5])
+    mrkInClean.append(mrkIn[5]) # p1
     mrkInClean.append(mrkIn[6])
-    mrkInClean.append(mrkIn[8])
-    mrkInClean.append(mrkIn[9])
-    mrkInClean.append(mrkIn[11])
+    mrkInClean.append(mrkIn[8]) # p2
+    mrkInClean.append(mrkIn[9]) 
+    mrkInClean.append(mrkIn[11]) # p3
     mrkInClean.append(mrkIn[12])
+    if numMrk > 4:
+        mrkInClean.append(mrkIn[14]) # p4
+        mrkInClean.append(mrkIn[15])
+        mrkInClean.append(mrkIn[17]) # p5
+        mrkInClean.append(mrkIn[18])
     mrkRatiosBuyCred = np.zeros((numMrk, numRec))
     mrkRatiosSellCred = np.zeros((numMrk, numRec))
     for l in range(0,len(mrkInClean),2):
@@ -276,11 +281,11 @@ def processMarktTables(bestM0, bestR1, mrk, rec):
     print("30    " + rec[4] + "\t" + str(bestR1[4,0]) + "\t" + str(bestR1[4,1]) + "\t" + str(bestR1[4,2]) + "\t" + str(bestR1[4,3]) + "\t" + "---")
 
 def main():
-    mrk = np.array(("Merc","Terr","Mart","Jup"))
+    mrk = np.array(("Merc","Terr","Mart","Jup","Sat","Ura"))
     rec = np.array(("M","D","H","Z","N"))
-    numMrk = 4 # Merc, Terr, Mart, Jup
+    numMrk = 6 # Merc, Terr, Mart, Jup
     numRec = 5 # M, D, H, Z, N
-    topN = 10 
+    topN = 20 
     marketInput = 'market.txt'
     rBuyCred, rSellCred = getMarketStats(marketInput, numMrk, numRec)
     # calculate cheapest/most expensive place to buy each Rec
